@@ -21,6 +21,8 @@ def make_factory_vars(prod_upbound_1,prod_upbound_2,dispatch_upbound_1,dispatch_
 
 
 
+
+
 	for i in range(1,32):
 		factory_1_inventory.append('f1_inv_{}'.format(i))
 		factory_2_inventory.append('f2_inv_{}'.format(i))
@@ -34,8 +36,8 @@ def make_factory_vars(prod_upbound_1,prod_upbound_2,dispatch_upbound_1,dispatch_
 		factory_2_dispatch.append('f2_r1_disp_{}'.format(i))
 		factory_2_dispatch.append('f2_r2_disp_{}'.format(i))
 
-		factory_vars['f1_inv_{}'.format(i)] = pulp.LpVariable('f1_inv_{}'.format(i),lowBound=0,cat='Continuous')
-		factory_vars['f2_inv_{}'.format(i)] = pulp.LpVariable('f2_inv_{}'.format(i),lowBound=0,cat='Continuous')
+		factory_vars['f1_inv_{}'.format(i)] = pulp.LpVariable('f1_inv_{}'.format(i),lowBound=0,upBound=10*prod_upbound_1,cat='Continuous')
+		factory_vars['f2_inv_{}'.format(i)] = pulp.LpVariable('f2_inv_{}'.format(i),lowBound=0,upBound=10*prod_upbound_1,cat='Continuous')
 
 		factory_vars['f1_prod_{}'.format(i)] = pulp.LpVariable('f1_prod_{}'.format(i),lowBound=0,upBound=prod_upbound_1,cat='Continuous')
 		factory_vars['f2_prod_{}'.format(i)] = pulp.LpVariable('f2_prod_{}'.format(i),lowBound=0,upBound=prod_upbound_2,cat='Continuous')
@@ -46,12 +48,23 @@ def make_factory_vars(prod_upbound_1,prod_upbound_2,dispatch_upbound_1,dispatch_
 		factory_vars['f2_r1_disp_{}'.format(i)] = pulp.LpVariable('f2_r1_disp_{}'.format(i),lowBound=0,upBound=dispatch_upbound_2,cat='Continuous')
 		factory_vars['f2_r2_disp_{}'.format(i)] = pulp.LpVariable('f2_r2_disp_{}'.format(i),lowBound=0,upBound=dispatch_upbound_2,cat='Continuous')
 
+
+		factory_vars['f1_r1_int_{}'.format(i)] = pulp.LpVariable('f1_r1_int_{}'.format(i),lowBound=0,upBound=10,cat='Integer')
+		factory_vars['f1_r2_int_{}'.format(i)] = pulp.LpVariable('f1_r2_int_{}'.format(i),lowBound=0,upBound=10,cat='Integer')
+
+		factory_vars['f2_r1_int_{}'.format(i)] = pulp.LpVariable('f2_r1_int_{}'.format(i),lowBound=0,upBound=10,cat='Integer')
+		factory_vars['f2_r2_int_{}'.format(i)] = pulp.LpVariable('f2_r2_int_{}'.format(i),lowBound=0,upBound=10,cat='Integer')
+
+
+		factory_vars['f1_prod_int_{}'.format(i)] = pulp.LpVariable('f1_prod_int_{}'.format(i),lowBound=0,upBound=1,cat='Integer')
+		factory_vars['f2_prod_int_{}'.format(i)] = pulp.LpVariable('f2_prod_int_{}'.format(i),lowBound=0,upBound=1,cat='Integer')
+
 	return factory_vars,factory_1_inventory,factory_2_inventory,factory_1_dispatch,factory_2_dispatch,factory_1_prod,factory_2_prod
 
 
 
 
-def rdc_vars(dispatch_upbound_1,dispatch_upbound_2):
+def rdc_vars(dispatch_upbound_1,dispatch_upbound_2,dispatch_limit_1,dispatch_limit_2):
 
 	rdc_vars = {}
 
@@ -93,10 +106,19 @@ def rdc_vars(dispatch_upbound_1,dispatch_upbound_2):
 		rdc_vars['rdc_1_disp_c3_{}'.format(i)] = pulp.LpVariable('rdc_1_disp_c3_{}'.format(i),lowBound=0,upBound=dispatch_upbound_1,cat='Continuous')
 
 
+		rdc_vars['rdc_1_int_c1_{}'.format(i)] = pulp.LpVariable('rdc_1_int_c1_{}'.format(i),lowBound=0,upBound=dispatch_limit_1,cat='Integer')
+		rdc_vars['rdc_1_int_c2_{}'.format(i)] = pulp.LpVariable('rdc_1_int_c2_{}'.format(i),lowBound=0,upBound=dispatch_limit_1,cat='Integer')
+		rdc_vars['rdc_1_int_c3_{}'.format(i)] = pulp.LpVariable('rdc_1_int_c3_{}'.format(i),lowBound=0,upBound=dispatch_limit_1,cat='Integer')
+
+
 		rdc_vars['rdc_2_disp_c1_{}'.format(i)] = pulp.LpVariable('rdc_2_disp_c1_{}'.format(i),lowBound=0,upBound=dispatch_upbound_2,cat='Continuous')
 		rdc_vars['rdc_2_disp_c2_{}'.format(i)] = pulp.LpVariable('rdc_2_disp_c2_{}'.format(i),lowBound=0,upBound=dispatch_upbound_2,cat='Continuous')
 		rdc_vars['rdc_2_disp_c3_{}'.format(i)] = pulp.LpVariable('rdc_2_disp_c3_{}'.format(i),lowBound=0,upBound=dispatch_upbound_2,cat='Continuous')
 
+
+		rdc_vars['rdc_2_int_c1_{}'.format(i)] = pulp.LpVariable('rdc_2_int_c1_{}'.format(i),lowBound=0,upBound=dispatch_limit_2,cat='Integer')
+		rdc_vars['rdc_2_int_c2_{}'.format(i)] = pulp.LpVariable('rdc_2_int_c2_{}'.format(i),lowBound=0,upBound=dispatch_limit_2,cat='Integer')
+		rdc_vars['rdc_2_int_c3_{}'.format(i)] = pulp.LpVariable('rdc_2_int_c3_{}'.format(i),lowBound=0,upBound=dispatch_limit_2,cat='Integer')
 
 	return rdc_vars,rdc_inventory_1,rdc_inventory_2,rdc_dispatch_1_c1,rdc_dispatch_1_c2,rdc_dispatch_1_c3,rdc_dispatch_2_c1,rdc_dispatch_2_c2,rdc_dispatch_2_c3
 
@@ -172,9 +194,34 @@ def customer_vars():
 	return cust_vars,customer_1_inventory,customer_2_inventory,customer_3_inventory,customer_1_disp,customer_2_disp,customer_3_disp
 
 
+f1_dispatch_moq = 10
+f1_prod_moq = 100
+f1_dispatch_limit = 15
 
-factory_vars,factory_1_inventory_name,factory_2_inventory_name,factory_1_dispatch_name,factory_2_dispatch_name,factory_1_prod_name,factory_2_prod_name = make_factory_vars(prod_upbound_1=300,prod_upbound_2=300,dispatch_upbound_1=150,dispatch_upbound_2=120)
-rdc_vars,rdc_inventory_1_c1,rdc_inventory_2,rdc_dispatch_1_c1,rdc_dispatch_1_c2,rdc_dispatch_1_c3,rdc_dispatch_2_c1,rdc_dispatch_2_c2,rdc_dispatch_2_c3 = rdc_vars(dispatch_upbound_1=100,dispatch_upbound_2=110)
+f2_dispatch_moq = 10
+f2_prod_moq = 180
+f2_dispatch_limit = 15
+
+service_level = 0.95
+rdc1_dispatch_moq = 10
+rdc2_dispatch_moq = 10
+
+rdc1_dispatch_limit = 30
+rdc2_dispatch_limit = 45
+
+
+
+factory_holding_cost = 1
+rdc1_holding_cost = 2
+rdc2_holding_cost = 1.8
+customer_holding_cost = 0.5
+slack_cost = 100
+
+M = 10000
+
+
+factory_vars,factory_1_inventory_name,factory_2_inventory_name,factory_1_dispatch_name,factory_2_dispatch_name,factory_1_prod_name,factory_2_prod_name = make_factory_vars(prod_upbound_1=f1_prod_moq,prod_upbound_2=f2_prod_moq,dispatch_upbound_1=f1_dispatch_moq*f1_dispatch_limit,dispatch_upbound_2=f1_dispatch_moq*f1_dispatch_limit)
+rdc_vars,rdc_inventory_1_c1,rdc_inventory_2,rdc_dispatch_1_c1,rdc_dispatch_1_c2,rdc_dispatch_1_c3,rdc_dispatch_2_c1,rdc_dispatch_2_c2,rdc_dispatch_2_c3 = rdc_vars(dispatch_upbound_1=rdc1_dispatch_moq*rdc1_dispatch_limit,dispatch_upbound_2=rdc1_dispatch_moq*rdc1_dispatch_limit,dispatch_limit_1=rdc1_dispatch_limit,dispatch_limit_2=rdc2_dispatch_limit)
 cust_vars,customer_1_inventory,customer_2_inventory,customer_3_inventory,customer_1_disp,customer_2_disp,customer_3_disp = customer_vars()
 
 
@@ -196,39 +243,43 @@ c1 = generate_cust_demand(65,35)
 c2 = generate_cust_demand(100,50)
 c3 = generate_cust_demand(35,8)
 
-f1_opng,f2_opng,rdc1_opng,rdc2_opng,c1_opng,c2_opng,c3_opng = inventory_opng(400,500,200,200,100,100,100)
+f1_opng,f2_opng,rdc1_opng,rdc2_opng,c1_opng,c2_opng,c3_opng = inventory_opng(340,300,220,260,130,190,160)
+
 
 
 
 #####make the factory_1 Inventory Flow Constraints 
-model += f1_opng  - factory_vars['f1_r1_disp_1'] - factory_vars['f1_r2_disp_1'] +  factory_vars['f1_prod_1'] == factory_vars['f1_inv_1'] 
+model += f1_opng  - factory_vars['f1_r1_disp_1'] - factory_vars['f1_r2_disp_1']  == factory_vars['f1_inv_1'] 
 model += factory_vars['f1_inv_1'] >= 0 
-model += factory_vars['f1_r1_disp_1'] >=0 
-model += factory_vars['f1_r2_disp_1'] >=0 
-model += factory_vars['f1_prod_1'] >= 0
+model += factory_vars['f1_r1_disp_1'] + factory_vars['f1_r2_disp_1'] == (factory_vars['f1_r1_int_1'] + factory_vars['f1_r2_int_1']) * f1_dispatch_moq
+model += factory_vars['f1_r1_int_1'] + factory_vars['f1_r2_int_1'] <= f1_dispatch_limit
+model += factory_vars['f1_prod_1'] == factory_vars['f1_prod_int_1'] * f1_prod_moq
+
 for i in range(1,31):
-	model += factory_vars['f1_inv_{}'.format(i)]   - factory_vars['f1_r1_disp_{}'.format(i+1)] - factory_vars['f1_r2_disp_{}'.format(i+1)] +  factory_vars['f1_prod_{}'.format(i+1)] == factory_vars['f1_inv_{}'.format(i+1)]
+	model += factory_vars['f1_inv_{}'.format(i)]   - factory_vars['f1_r1_disp_{}'.format(i+1)] - factory_vars['f1_r2_disp_{}'.format(i+1)] +  factory_vars['f1_prod_{}'.format(i)] == factory_vars['f1_inv_{}'.format(i+1)]
 	model += factory_vars['f1_inv_{}'.format(i+1)]>=0
-	model += factory_vars['f1_r1_disp_{}'.format(i+1)] >=0
-	model += factory_vars['f1_r2_disp_{}'.format(i+1)] >=0 
-	model += factory_vars['f1_prod_{}'.format(i+1)] >= 0
+	model += factory_vars['f1_r1_disp_{}'.format(i+1)] + factory_vars['f1_r2_disp_{}'.format(i+1)] == (factory_vars['f1_r1_int_{}'.format(i+1)] + factory_vars['f1_r2_int_{}'.format(i+1)]) * f1_dispatch_moq
+	model += factory_vars['f1_r1_int_{}'.format(i+1)] + factory_vars['f1_r2_int_{}'.format(i+1)] <= f1_dispatch_limit
+	model += factory_vars['f1_prod_{}'.format(i+1)] == factory_vars['f1_prod_int_{}'.format(i+1)] * f1_prod_moq
 
 
 
 ###make the factory 2 Inventory FLow Constraints 
 
-model += f2_opng  - factory_vars['f2_r1_disp_1'] - factory_vars['f2_r2_disp_1'] +  factory_vars['f2_prod_1'] == factory_vars['f2_inv_1'] 
+model += f2_opng  - factory_vars['f2_r1_disp_1'] - factory_vars['f2_r2_disp_1']  == factory_vars['f2_inv_1'] 
 model += factory_vars['f2_inv_1'] >= 0 
-model += factory_vars['f2_r1_disp_1'] >=0 
-model += factory_vars['f2_r2_disp_1'] >=0 
-model += factory_vars['f2_prod_1'] >= 0
-for i in range(1,31):
-	model += factory_vars['f2_inv_{}'.format(i)]   - factory_vars['f2_r1_disp_{}'.format(i+1)] - factory_vars['f2_r2_disp_{}'.format(i+1)] +  factory_vars['f2_prod_{}'.format(i+1)] == factory_vars['f2_inv_{}'.format(i+1)]
-	model += factory_vars['f2_inv_{}'.format(i+1)]>=0
-	model += factory_vars['f2_r1_disp_{}'.format(i+1)] >=0
-	model += factory_vars['f2_r2_disp_{}'.format(i+1)] >=0 
-	model += factory_vars['f2_prod_{}'.format(i+1)] >= 0
+model += factory_vars['f2_r1_disp_1'] +  factory_vars['f2_r2_disp_1'] == (factory_vars['f2_r1_int_1'] + factory_vars['f2_r2_int_1']) * f2_dispatch_moq
+model += factory_vars['f2_r1_int_1'] + factory_vars['f2_r2_int_1'] <= f2_dispatch_limit
+model += factory_vars['f2_prod_1'] == factory_vars['f2_prod_int_1'] * f2_prod_moq
 
+
+for i in range(1,31):
+	model += factory_vars['f2_inv_{}'.format(i)]   - factory_vars['f2_r1_disp_{}'.format(i+1)] - factory_vars['f2_r2_disp_{}'.format(i+1)] +  factory_vars['f2_prod_{}'.format(i)] == factory_vars['f2_inv_{}'.format(i+1)]
+	model += factory_vars['f2_inv_{}'.format(i+1)]>=0
+	model += factory_vars['f2_r1_disp_{}'.format(i+1)] + factory_vars['f2_r2_disp_{}'.format(i+1)] == (factory_vars['f2_r1_int_{}'.format(i+1)] + factory_vars['f2_r2_int_{}'.format(i+1)]) * f2_dispatch_moq
+	model += factory_vars['f2_r1_int_{}'.format(i+1)] + factory_vars['f2_r2_int_{}'.format(i+1)] <= f2_dispatch_limit
+	model += factory_vars['f2_prod_{}'.format(i+1)] == factory_vars['f2_prod_int_{}'.format(i+1)] * f2_prod_moq
+	
 
 
 
@@ -239,47 +290,61 @@ model += rdc1_opng  - rdc_vars['rdc_1_disp_c1_1'] - rdc_vars['rdc_1_disp_c2_1'] 
 model += rdc_vars['rdc_1_disp_c2_1'] == 0
 model += rdc_vars['rdc_1_disp_c3_1'] == 0
 model += rdc_vars['rdc_1_inv_1'] >=0
-model += rdc_vars['rdc_1_disp_c1_1'] >=0
+model += rdc_vars['rdc_1_disp_c1_1'] + rdc_vars['rdc_1_disp_c2_1'] + rdc_vars['rdc_1_disp_c3_1']  == (rdc_vars['rdc_1_int_c1_1']+rdc_vars['rdc_1_int_c2_1']+rdc_vars['rdc_1_int_c3_1'])*rdc1_dispatch_moq
+model += rdc_vars['rdc_1_int_c1_1']+rdc_vars['rdc_1_int_c2_1']+rdc_vars['rdc_1_int_c3_1']<=rdc1_dispatch_limit
 
 model += rdc_vars['rdc_1_inv_1'] -  rdc_vars['rdc_1_disp_c1_2'] - rdc_vars['rdc_1_disp_c2_2'] - rdc_vars['rdc_1_disp_c3_2'] == rdc_vars['rdc_1_inv_2']
 model += rdc_vars['rdc_1_disp_c2_2'] == 0
 model += rdc_vars['rdc_1_disp_c3_2'] == 0
 model += rdc_vars['rdc_1_inv_2'] >=0
-model += rdc_vars['rdc_1_disp_c1_2'] >=0
+model += rdc_vars['rdc_1_disp_c1_2'] + rdc_vars['rdc_1_disp_c2_2'] + rdc_vars['rdc_1_disp_c3_2']  == (rdc_vars['rdc_1_int_c1_2']+rdc_vars['rdc_1_int_c2_2']+rdc_vars['rdc_1_int_c3_2'])*rdc1_dispatch_moq
+model += rdc_vars['rdc_1_int_c1_2']+rdc_vars['rdc_1_int_c2_2']+rdc_vars['rdc_1_int_c3_2']<=rdc1_dispatch_limit
+
 
 
 model += rdc_vars['rdc_1_inv_2'] -  rdc_vars['rdc_1_disp_c1_3'] - rdc_vars['rdc_1_disp_c2_3'] - rdc_vars['rdc_1_disp_c3_3'] == rdc_vars['rdc_1_inv_3']
 model += rdc_vars['rdc_1_disp_c2_3'] == 0
 model += rdc_vars['rdc_1_disp_c3_3'] == 0
 model += rdc_vars['rdc_1_inv_3'] >=0
-model += rdc_vars['rdc_1_disp_c1_3'] >=0
-
+model += rdc_vars['rdc_1_disp_c1_3'] + rdc_vars['rdc_1_disp_c2_3'] + rdc_vars['rdc_1_disp_c3_3']  == (rdc_vars['rdc_1_int_c1_3']+rdc_vars['rdc_1_int_c2_3']+rdc_vars['rdc_1_int_c3_3'])*rdc1_dispatch_moq
+model += rdc_vars['rdc_1_int_c1_3']+rdc_vars['rdc_1_int_c2_3']+rdc_vars['rdc_1_int_c3_3']<=rdc1_dispatch_limit
 
 for i in range(3,31):
 	model += rdc_vars['rdc_1_inv_{}'.format(i)] - rdc_vars['rdc_1_disp_c1_{}'.format(i+1)] - rdc_vars['rdc_1_disp_c2_{}'.format(i+1)]  - rdc_vars['rdc_1_disp_c3_{}'.format(i+1)] + factory_vars['f1_r1_disp_{}'.format(i+1-3)] + factory_vars['f2_r1_disp_{}'.format(i+1-3)]== rdc_vars['rdc_1_inv_{}'.format(i+1)]
 	model += rdc_vars['rdc_1_disp_c2_{}'.format(i+1)]==0
 	model += rdc_vars['rdc_1_disp_c3_{}'.format(i+1)]==0
 	model += rdc_vars['rdc_1_inv_{}'.format(i+1)]>=0
-	model += rdc_vars['rdc_1_disp_c1_{}'.format(i+1)]>=0
+	model += rdc_vars['rdc_1_disp_c1_{}'.format(i+1)] + rdc_vars['rdc_1_disp_c2_{}'.format(i+1)] + rdc_vars['rdc_1_disp_c3_{}'.format(i+1)]  == (rdc_vars['rdc_1_int_c1_{}'.format(i+1)]+rdc_vars['rdc_1_int_c2_{}'.format(i+1)]+rdc_vars['rdc_1_int_c3_{}'.format(i+1)])*rdc1_dispatch_moq
+	model += rdc_vars['rdc_1_int_c1_{}'.format(i+1)]+rdc_vars['rdc_1_int_c2_{}'.format(i+1)]+rdc_vars['rdc_1_int_c3_{}'.format(i+1)]<=rdc1_dispatch_limit
 
 ###make the RDC2 constraints, 
 
 model += rdc2_opng  - rdc_vars['rdc_2_disp_c1_1'] - rdc_vars['rdc_2_disp_c2_1'] - rdc_vars['rdc_2_disp_c3_1'] == rdc_vars['rdc_2_inv_1']
-model += rdc_vars['rdc_2_disp_c2_1'] >= 0
-model += rdc_vars['rdc_2_disp_c3_1'] >= 0
+model += rdc_vars['rdc_2_disp_c1_1'] + rdc_vars['rdc_2_disp_c2_1'] + rdc_vars['rdc_2_disp_c3_1']  == (rdc_vars['rdc_2_int_c1_1']+rdc_vars['rdc_2_int_c2_1']+rdc_vars['rdc_2_int_c3_1'])*rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c1_1'] == rdc_vars['rdc_2_int_c1_1'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c2_1'] == rdc_vars['rdc_2_int_c2_1'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c3_1'] == rdc_vars['rdc_2_int_c3_1'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_int_c1_1']+rdc_vars['rdc_2_int_c2_1']+rdc_vars['rdc_2_int_c3_1']<=rdc2_dispatch_limit
 model += rdc_vars['rdc_2_inv_1'] >=0
 model += rdc_vars['rdc_2_disp_c1_1'] ==0
 
 model += rdc_vars['rdc_2_inv_1']  - rdc_vars['rdc_2_disp_c1_2'] - rdc_vars['rdc_2_disp_c2_2'] - rdc_vars['rdc_2_disp_c3_2'] == rdc_vars['rdc_2_inv_2']
-model += rdc_vars['rdc_2_disp_c2_2'] >= 0
-model += rdc_vars['rdc_2_disp_c3_2'] >= 0
+model += rdc_vars['rdc_2_disp_c1_2'] + rdc_vars['rdc_2_disp_c2_2'] + rdc_vars['rdc_2_disp_c3_2']  == (rdc_vars['rdc_2_int_c1_2']+rdc_vars['rdc_2_int_c2_2']+rdc_vars['rdc_2_int_c3_2'])*rdc2_dispatch_moq
+model += rdc_vars['rdc_2_int_c1_2']+rdc_vars['rdc_2_int_c2_2']+rdc_vars['rdc_2_int_c3_2']<=rdc2_dispatch_limit
+model += rdc_vars['rdc_2_disp_c1_2'] == rdc_vars['rdc_2_int_c1_2'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c2_2'] == rdc_vars['rdc_2_int_c2_2'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c3_2'] == rdc_vars['rdc_2_int_c3_2'] * rdc2_dispatch_moq
+
 model += rdc_vars['rdc_2_inv_2'] >=0
 model += rdc_vars['rdc_2_disp_c1_2'] ==0
 
 
 model += rdc_vars['rdc_2_inv_2']  - rdc_vars['rdc_2_disp_c1_3'] - rdc_vars['rdc_2_disp_c2_3'] - rdc_vars['rdc_2_disp_c3_3'] == rdc_vars['rdc_2_inv_3']
-model += rdc_vars['rdc_2_disp_c2_3'] >= 0
-model += rdc_vars['rdc_2_disp_c3_3'] >= 0
+model += rdc_vars['rdc_2_disp_c1_3'] + rdc_vars['rdc_2_disp_c2_3'] + rdc_vars['rdc_2_disp_c3_3']  == (rdc_vars['rdc_2_int_c1_3']+rdc_vars['rdc_2_int_c2_3']+rdc_vars['rdc_2_int_c3_3'])*rdc2_dispatch_moq
+model += rdc_vars['rdc_2_int_c1_3']+rdc_vars['rdc_2_int_c2_3']+rdc_vars['rdc_2_int_c3_3']<=rdc2_dispatch_limit
+model += rdc_vars['rdc_2_disp_c1_3'] == rdc_vars['rdc_2_int_c1_3'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c2_3'] == rdc_vars['rdc_2_int_c2_3'] * rdc2_dispatch_moq
+model += rdc_vars['rdc_2_disp_c3_3'] == rdc_vars['rdc_2_int_c3_3'] * rdc2_dispatch_moq
 model += rdc_vars['rdc_2_inv_3'] >=0
 model += rdc_vars['rdc_2_disp_c1_3'] ==0
 
@@ -289,13 +354,14 @@ for i in range(3,31):
 
 	model += rdc_vars['rdc_2_inv_{}'.format(i)] - rdc_vars['rdc_2_disp_c1_{}'.format(i+1)] - rdc_vars['rdc_2_disp_c2_{}'.format(i+1)]  - rdc_vars['rdc_2_disp_c3_{}'.format(i+1)] + factory_vars['f1_r2_disp_{}'.format(i+1-3)] + factory_vars['f2_r2_disp_{}'.format(i+1-3)]== rdc_vars['rdc_2_inv_{}'.format(i+1)]
 	model += rdc_vars['rdc_2_disp_c1_{}'.format(i+1)] == 0
-	model += rdc_vars['rdc_2_disp_c2_{}'.format(i+1)] >= 0
-	model += rdc_vars['rdc_2_disp_c3_{}'.format(i+1)] >= 0
+	model += rdc_vars['rdc_2_disp_c1_{}'.format(i+1)] + rdc_vars['rdc_2_disp_c2_{}'.format(i+1)] + rdc_vars['rdc_2_disp_c3_{}'.format(i+1)]  == (rdc_vars['rdc_2_int_c1_{}'.format(i+1)]+rdc_vars['rdc_2_int_c2_{}'.format(i+1)]+rdc_vars['rdc_2_int_c3_{}'.format(i+1)])*rdc2_dispatch_moq
+	model += rdc_vars['rdc_2_int_c1_{}'.format(i+1)]+rdc_vars['rdc_2_int_c2_{}'.format(i+1)]+rdc_vars['rdc_2_int_c3_{}'.format(i+1)]<=rdc2_dispatch_limit
+	model += rdc_vars['rdc_2_disp_c1_{}'.format(i+1)] == rdc_vars['rdc_2_int_c1_{}'.format(i+1)] * rdc2_dispatch_moq
+	model += rdc_vars['rdc_2_disp_c2_{}'.format(i+1)] == rdc_vars['rdc_2_int_c2_{}'.format(i+1)] * rdc2_dispatch_moq
+	model += rdc_vars['rdc_2_disp_c3_{}'.format(i+1)] == rdc_vars['rdc_2_int_c3_{}'.format(i+1)] * rdc2_dispatch_moq
 	model += rdc_vars['rdc_2_inv_{}'.format(i+1)]>=0
 
 
-M = 10000
-service_level = 0.95
 
 ###make the C1 constraints 
 
@@ -353,7 +419,7 @@ model += cust_vars['cust_2_inv_2'] <= M*(1-cust_vars['cust_2_bin_2'])
 
 
 for i in range(2,31):
-	model += cust_vars['cust_2_inv_{}'.format(i)] - c1[i] + cust_vars['cust_2_slack_{}'.format(i+1)] + rdc_vars['rdc_1_disp_c2_{}'.format(i+1-2)] + rdc_vars['rdc_2_disp_c2_{}'.format(i+1-2)] == cust_vars['cust_2_inv_{}'.format(i+1)]
+	model += cust_vars['cust_2_inv_{}'.format(i)] - c2[i] + cust_vars['cust_2_slack_{}'.format(i+1)] + rdc_vars['rdc_1_disp_c2_{}'.format(i+1-2)] + rdc_vars['rdc_2_disp_c2_{}'.format(i+1-2)] == cust_vars['cust_2_inv_{}'.format(i+1)]
 	# model += rdc_vars['rdc_2_disp_c1_{}'.format(i+1-2)]==0
 
 	model += cust_vars['cust_2_inv_{}'.format(i)]+rdc_vars['rdc_1_disp_c2_{}'.format(i+1-2)] + rdc_vars['rdc_2_disp_c2_{}'.format(i+1-2)]   - c2[i] >= -M * cust_vars['cust_2_bin_{}'.format(i+1)]
@@ -391,7 +457,7 @@ model += cust_vars['cust_3_inv_2'] <= M*(1-cust_vars['cust_3_bin_2'])
 
 
 for i in range(2,31):
-	model += cust_vars['cust_3_inv_{}'.format(i)] - c1[i] + cust_vars['cust_3_slack_{}'.format(i+1)] + rdc_vars['rdc_1_disp_c3_{}'.format(i+1-2)] + rdc_vars['rdc_2_disp_c3_{}'.format(i+1-2)] == cust_vars['cust_3_inv_{}'.format(i+1)]
+	model += cust_vars['cust_3_inv_{}'.format(i)] - c3[i] + cust_vars['cust_3_slack_{}'.format(i+1)] + rdc_vars['rdc_1_disp_c3_{}'.format(i+1-2)] + rdc_vars['rdc_2_disp_c3_{}'.format(i+1-2)] == cust_vars['cust_3_inv_{}'.format(i+1)]
 	# model += rdc_vars['rdc_2_disp_c1_{}'.format(i+1-2)]==0
 
 	model += cust_vars['cust_3_inv_{}'.format(i)]+rdc_vars['rdc_1_disp_c3_{}'.format(i+1-2)] + rdc_vars['rdc_2_disp_c3_{}'.format(i+1-2)]   - c3[i] >= -M * cust_vars['cust_3_bin_{}'.format(i+1)]
@@ -409,6 +475,7 @@ factory_holding_cost = 1
 rdc1_holding_cost = 2
 rdc2_holding_cost = 1.8
 customer_holding_cost = 3
+slack_cost = 100
 
 factory_holding = factory_vars['f1_inv_1']
 rdc_1_holding = rdc_vars['rdc_1_inv_1']
@@ -431,11 +498,15 @@ for i in range(2,32):
 
 model += slack_volume <= (1-service_level)*(sum(c1)+sum(c2)+sum(c3))
 
-model += factory_holding_cost*factory_holding + rdc_1_holding*rdc1_holding_cost + rdc_2_holding * rdc2_holding_cost + (c1_holding+c2_holding+c3_holding)*customer_holding_cost
+model += factory_holding_cost*factory_holding + rdc_1_holding*rdc1_holding_cost + rdc_2_holding * rdc2_holding_cost + (c1_holding+c2_holding+c3_holding)*customer_holding_cost + slack_cost*slack_volume
 
 
 
-model.solve()
+# model.solve(pulp.GUROBI_CMD())
+
+model.solve(pulp.GUROBI(msg=True))
+
+
 
 df = pd.DataFrame()
 
@@ -521,12 +592,14 @@ df['f1_holding'] = f1_holding
 df['f1_dispatch_r1'] = f1_dispatch_r1
 df['f1_dispatch_r2'] = f1_dispatch_r2 
 df['f1_production'] = f1_production 
+# df['f1_Peak_Holding'] = df['f1_holding'] + df['f1_dispatch_r1'] + df['f1_dispatch_r2'] + df['f1_production']
 
 
 df['f2_holding'] = f2_holding
 df['f2_dispatch_r1'] = f2_dispatch_r1 
 df['f2_dispatch_r2'] = f2_dispatch_r2
 df['f2_production'] = f2_production
+# df['f2_Peak_Holding'] = df['f2_holding'] + df['f2_dispatch_r1'] + df['f2_dispatch_r2'] + df['f2_production']
 
 
 
@@ -535,27 +608,52 @@ df['rdc1_dispatch_c1'] = rdc1_dispatch_c1
 df['rdc1_dispatch_c2'] = rdc1_dispatch_c2
 df['rdc1_dispatch_c3'] = rdc1_dispatch_c3
 
+# df['rdc1_peak_holding'] = df['rdc1_holding'] + df['rdc1_dispatch_c1'] + df['rdc1_dispatch_c2'] + df['rdc1_dispatch_c3']
+
 df['rdc2_holding'] = rdc2_holding 
 df['rdc2_dispatch_c1'] = rdc2_dispatch_c1 
 df['rdc2_dispatch_c2'] = rdc2_dispatch_c2
 df['rdc2_dispatch_c3'] = rdc2_dispatch_c3 
 
+# df['rdc2_peak_holding'] = df['rdc2_holding'] + df['rdc2_dispatch_c1'] + df['rdc2_dispatch_c2'] + df['rdc2_dispatch_c3']
+
 
 df['c1_holding'] = c1_holding
 df['c1_demand']  = c1_demand  
 df['c1_slack'] = c1_slack 
+df['c1_actuals'] = df['c1_demand'] - df['c1_slack'] 
+
 
 df['c2_holding'] = c2_holding 
 df['c2_demand']  = c2_demand
 df['c2_slack'] = c2_slack
+df['c2_actuals'] = df['c2_demand'] - df['c2_slack'] 
+
+
+
 
 df['c3_holding'] = c3_holding 
 df['c3_demand']  = c3_demand
 df['c3_slack'] = c3_slack
+df['c3_actuals'] = df['c3_demand'] - df['c3_slack'] 
+
+
+
+
+
+
+
 
 
 print(df)
 
+
+
+print(c1)
+print(c2)
+print(c3)
+
+print(1 - (np.sum(df['c3_slack']+df['c2_slack']+df['c1_slack']))/np.sum(df['c3_demand']+df['c2_demand']+df['c1_demand']),'Service Level')
+print(np.sum(c1+c2+c3)/31)
+
 df.to_csv('results_MEIO.csv')
-
-
